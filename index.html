@@ -3,23 +3,143 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Scatter Plot with D3.js</title>
-    <!-- Include D3.js library -->
+    <title>Semantic Relation between Courses</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
-      .label {
+      :root {
+        font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande',
+          'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+        background-color: rgb(24, 24, 30);
+      }
+
+      #body {
+        width: 100vw;
+      }
+
+      .title {
+        color: rgb(255, 255, 255);
+        font-size: x-large;
+        display: flex;
+        flex-direction: column;
+        justify-items: center;
+        align-items: center;
+        font-weight: bold;
+      }
+
+      .subtitle {
+        color: rgb(200, 200, 200);
+        font-size: medium;
+        display: flex;
+        flex-direction: column;
+        justify-items: center;
+        align-items: center;
+        font-weight: 100;
+        margin-top: -0.5rem;
+      }
+
+      .titleElement {
+        margin-top: 4rem;
+      }
+
+      .plot-container {
+        margin-top: 2rem;
+        display: flex;
+        flex-direction: column;
+        justify-items: center;
+        align-items: center;
+      }
+
+      .dropdown {
+        position: relative;
+        display: inline-block;
+      }
+
+      /* Style for the button that opens the dropdown */
+      .dropdown-button {
+        background-color: #5300eb;
+        color: white;
+        font-size: medium;
+        padding: 10px 20px;
+        border: none;
+        cursor: pointer;
+      }
+
+      /* Style for the dropdown content (hidden by default) */
+      .dropdown-content {
+        display: none;
+        position: absolute;
+        background-color: #676767;
+        min-width: 160px;
+        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+        z-index: 1;
+      }
+
+      /* Style for the dropdown items */
+      .dropdown-item {
+        padding: 12px 16px;
+        text-decoration: none;
+        display: block;
+        padding: 1rem;
+      }
+
+      /* Change the color of the dropdown items on hover */
+      .dropdown-item:hover {
+        background-color: #ddd;
+      }
+
+      /* Show the dropdown content when hovering over the dropdown button */
+      .dropdown:hover .dropdown-content {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .scatter-plot {
+        background-color: rgb(44, 44, 50);
+        border-radius: 2rem;
+        padding: 5rem 2rem 2rem 2rem;
+        display: flex;
+        justify-content: center;
+      }
+
+      .tooltip {
+        position: absolute;
+        background-color: rgba(0, 0, 0, 0.5);
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
         pointer-events: none;
+        font-size: 12px;
+        display: none;
       }
     </style>
   </head>
   <body>
-    <h1>Scatter Plot with D3.js</h1>
-    <div id="scatter-plot"></div>
+    <div class="titleElement">
+      <h1 class="title">Schematic connection of courses</h1>
+      <h1 class="subtitle">ZHAW computer science until 4th semester</h1>
+    </div>
+    <div class="plot-container">
+      <div class="toolbar-container">
+        <div class="dropdown">
+          <button class="dropdown-button">Dropdown</button>
+          <div class="dropdown-content">
+            <a href="#">Option 1</a>
+            <a href="#">Option 2</a>
+            <a href="#">Option 3</a>
+          </div>
+        </div>
+      </div>
+      <div class="scatter-plot" id="scatter-plot"></div>
+    </div>
+    <div class="tooltip" id="tooltip"></div>
 
     <script>
       // Define the dimensions of the SVG canvas
       const width = 600;
       const height = 400;
+
+      const initialZoomScale = 1; // Set your initial zoom scale factor
+      const referenceSize = 50; // Set a reference size for your data points
 
       // Create an SVG element
       const svg = d3
@@ -29,17 +149,18 @@
         .attr('height', height);
 
       // Load data from a CSV file
-      d3.csv('allCourses.csv').then(function (data) {
+      d3.csv('allCourses2.csv').then(function (data) {
         // Convert x, y, and size values to numbers
+        data.sort((b, a) => a.size - b.size);
+
         data.forEach(function (d) {
           d.x = +d.x;
           d.y = +d.y;
           d.size = +d.size;
         });
 
-        // Define scales for x and y axes with the range from -120 to 120
+        // Define scales for x and y axes
         const xScale = d3.scaleLinear().domain([-120, 120]).range([0, width]);
-
         const yScale = d3.scaleLinear().domain([-120, 120]).range([height, 0]);
 
         // Create a color scale based on the number of data points
@@ -47,6 +168,42 @@
           .scaleOrdinal()
           .domain(d3.range(data.length))
           .range(d3.schemeCategory10);
+
+        const zoom = d3
+          .zoom()
+          .scaleExtent([0.5, 5]) // Set the minimum and maximum zoom scale
+          .on('zoom', zoomed);
+
+        function zoomed(event) {
+          // Get the current zoom transform
+          const { transform } = event;
+
+          // Update the scaling of the scatter plot elements
+          svg.selectAll('circle').attr('transform', transform.toString());
+
+          svg
+            .selectAll('circle')
+            .attr(
+              'r',
+              (d) =>
+                (d.size / referenceSize) * (currentZoomScale / initialZoomScale)
+            );
+
+          // Update axes if you have them
+          // x-axis
+          svg
+            .select('.x-axis')
+            .attr('transform', `translate(0, ${height})`)
+            .call(d3.axisBottom(xScale).scale(transform.rescaleX(xScale)));
+
+          // y-axis
+          svg
+            .select('.y-axis')
+            .call(d3.axisLeft(yScale).scale(transform.rescaleY(yScale)));
+        }
+
+        // Apply the zoom behavior to the SVG container
+        svg.call(zoom);
 
         // Create circles for each data point, with size and color determined by the data
         svg
@@ -56,22 +213,37 @@
           .append('circle')
           .attr('cx', (d) => xScale(d.x))
           .attr('cy', (d) => yScale(d.y))
-          .attr('r', (d) => d.size / 50) // Size of the circles based on the "size" column
+          .attr('r', (d) => d.size / 50 + 5) // Size of the circles based on the "size" column
           .attr('fill', (d, i) => colorScale(i)) // Color of the circles based on the data point index
           .on('mouseover', function (d) {
-            // Show label when mouseover event occurs
-            svg
-              .append('text')
-              .attr('class', 'label')
-              .attr('x', xScale(d.x) + 10)
-              .attr('y', yScale(d.y))
-              .attr('font-size', '12px')
-              .attr('fill', 'black')
-              .text(d.name); // Adjusted to use the "name" column
+            name = d.toElement.__data__.name;
+            size = d.toElement.__data__.size;
+            d3.select('#tooltip')
+              .style('display', 'block')
+              .html(`<strong>${name}</strong><br>Pages: ${size}`);
+
+            // Add animation to increase the size of the circle
+            d3.select(this)
+              .transition()
+              .duration(200) // Set the duration of the animation in milliseconds
+              .attr('r', (d) => d.size / 50 + 10); // Increase the size as desired
+          })
+          .on('mousemove', function (event) {
+            // Move the tooltip with the mouse
+            d3.select('#tooltip')
+              .style('left', event.pageX + 10 + 'px')
+              .style('top', event.pageY - 10 + 'px');
           })
           .on('mouseout', function () {
-            // Remove the label when mouseout event occurs
-            svg.select('.label').remove();
+            // Hide the tooltip when mouseout event occurs
+            d3.select('#tooltip').style('display', 'none');
+            d3.select(this)
+              .transition()
+              .duration(200) // Set the duration of the animation in milliseconds
+              .attr('r', (d) => d.size / 50 + 5); // Increase the size as desired
+          })
+          .on('click', function (event) {
+            console.log(event);
           });
       });
     </script>
