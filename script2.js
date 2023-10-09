@@ -4,7 +4,7 @@ let containerDiv = document.getElementById('scatter-plot');
 let padding = containerDiv.offsetWidth * 0.05;
 let width = containerDiv.offsetWidth - padding;
 let height = containerDiv.offsetHeight - padding;
-let radius = width / 750;
+let radius = width / 1000;
 
 const initialZoomScale = 1; // Set your initial zoom scale factor
 const referenceSize = 50;
@@ -20,7 +20,6 @@ onresize(containerDiv, function () {
   radius = width / 750;
   scatterPlotDiv.innerHTML = '';
   plotAllPages();
-  console.log(width);
 });
 
 // Create an SVG element
@@ -33,6 +32,8 @@ function plotAllPages() {
     .attr('width', width)
     .attr('height', height);
 
+  const categories = [];
+
   d3.csv('data/allPages.csv').then(function (data) {
     // Convert x, y, and size values to numbers
     data.sort((b, a) => a.size - b.size);
@@ -40,12 +41,26 @@ function plotAllPages() {
     data.forEach(function (d) {
       d.x = +d.x;
       d.y = +d.y;
+      if (!categories.includes(d.category)) {
+        categories.push(d.category);
+      }
     });
 
+    console.log(categories);
+
+    //const colorScale = d3
+    //  .scaleLinear()
+    //  .domain([0, 100]) // Define the range of values that map to the gradient
+    //  .range(['red', 'green']); // Define the gradient colors
+
     const colorScale = d3
-      .scaleLinear()
-      .domain([0, 100]) // Define the range of values that map to the gradient
-      .range(['red', 'blue']); // Define the gradient colors
+      .scaleOrdinal()
+      .domain(categories)
+      .range(
+        categories.map((d, i) =>
+          d3.interpolateRainbow(i / (categories.length - 1))
+        )
+      );
 
     // Define scales for x and y axes
     const xScale = d3.scaleLinear().domain([-120, 120]).range([0, width]);
@@ -90,15 +105,18 @@ function plotAllPages() {
       .attr('cx', (d) => xScale(d.x))
       .attr('cy', (d) => yScale(d.y))
       .attr('r', radius) // Size of the circles based on the "size" column
-      .attr('fill', (d, i) => colorScale(i * 4)) // Color of the circles based on the data point index
+      .attr('fill', (d) => colorScale(d.category)) // Color of the circles based on the data point index
+      .classed('drop-shadow', true)
       .on('mouseover', function (d) {
-        name = d.toElement.__data__.name;
-        size = d.toElement.__data__.size;
+        course = d.toElement.__data__.category;
+        filename = d.toElement.__data__.name;
+        page = d.toElement.__data__.page;
         d3.select('#tooltip')
           .style('display', 'block')
-          .html(`<strong>${name}</strong><br>Pages: ${size}`);
+          .html(
+            `<strong>${course}</strong><br>File: ${filename}<br>Pages: ${page}`
+          );
 
-        console.log(d.name);
         // Add animation to increase the size of the circle
         d3.select(this)
           .transition()
