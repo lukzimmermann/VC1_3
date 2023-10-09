@@ -18,7 +18,7 @@ let radius = width / 1000;
 
 let pointScale = width / 500;
 
-const initialZoomScale = 1; // Set your initial zoom scale factor
+const initialZoomScale = 1;
 const referenceSize = 50;
 
 let activeView = 2;
