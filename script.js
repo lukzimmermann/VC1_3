@@ -333,7 +333,7 @@ function plotAllPages() {
         d3.select('#tooltip')
           .style('display', 'block')
           .html(
-            `<strong>${course}</strong><br>File: ${filename}<br>Pages: ${page}`
+            `<strong>${course}</strong><br>File: ${filename}<br>Page: #${page}`
           );
 
         d3.select(this)
