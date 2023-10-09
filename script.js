@@ -2,6 +2,7 @@ const courseButton = document.getElementById('courseButton');
 const documentsButton = document.getElementById('documentsButton');
 const pagesButton = document.getElementById('pagesButton');
 const resetButton = document.getElementById('resetButton');
+const numberOf = document.getElementById('numberOf');
 
 courseButton.addEventListener('click', coursesClicked);
 documentsButton.addEventListener('click', documentsClicked);
@@ -20,7 +21,8 @@ let pointScale = width / 500;
 const initialZoomScale = 1; // Set your initial zoom scale factor
 const referenceSize = 50;
 
-let activeView = 0;
+let activeView = 2;
+pagesClicked();
 
 const onresize = (dom_elem, callback) => {
   const resizeObserver = new ResizeObserver(() => callback());
@@ -71,7 +73,6 @@ onresize(containerDiv, function () {
   if (activeView == 2) plotAllPages();
 
   pointScale = width / 500;
-  console.log(pointScale);
 });
 
 function plotAllCourses() {
@@ -94,6 +95,8 @@ function plotAllCourses() {
         categories.push(d.name);
       }
     });
+
+    numberOf.textContent = `Number of Courses: ${data.length}`;
 
     const colorScale = d3
       .scaleOrdinal()
@@ -185,6 +188,8 @@ function plotAllDocuments() {
         categories.push(d.category);
       }
     });
+
+    numberOf.textContent = `Number of Documents: ${data.length}`;
 
     const colorScale = d3
       .scaleOrdinal()
@@ -278,6 +283,8 @@ function plotAllPages() {
         categories.push(d.category);
       }
     });
+
+    numberOf.textContent = `Number of Pages: ${data.length}`;
 
     const colorScale = d3
       .scaleOrdinal()

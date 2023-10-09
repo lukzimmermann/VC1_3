@@ -10,23 +10,52 @@
   <body id="body">
     <div class="titleElement">
       <h1 class="title">Schematic connection of courses</h1>
-      <h1 class="subtitle">ZHAW computer science until 4th semester</h1>
+      <h2 class="subtitle">ZHAW computer science until 4th semester</h1>
     </div>
 
     <div class="plot-container" id="plot-container">
       <div class="toolbar">
         <div class="selector">
-          <button class="courseButton" id="courseButton">Courses</button>
+          <button class="pagesButton" id="pagesButton">Pages</button>
           <button class="documentsButton" id="documentsButton">
             Documents
           </button>
-          <button class="pagesButton" id="pagesButton">Pages</button>
+          <button class="courseButton" id="courseButton">Courses</button>
         </div>
         <button class="resetButton" id="resetButton">Reset</button>
       </div>
       <div class="scatter-plot" id="scatter-plot"></div>
     </div>
     <div class="tooltip" id="tooltip"></div>
+    <div class="documentation-container">
+      <div class="numberOf-container">
+        <p id="numberOf">Number of Courses:</p>
+      </div>
+      <div class="decripton-container">
+        <p></p>
+        <h3>Description</h3>
+        <p>
+          All slides or scripts of the computer science studies up to the 4th
+          semester were analyzed (and a few slides of the 5th semester).
+          Furthermore, an embedding vector was created for each page/slide. This
+          vector represents the semantic meaning. Since this vector has a
+          dimension of 1536, TSNE (T-distributed Stochastic Neighbor Embedding)
+          was used to reduce the dimension to 2 to represent it graphically.
+          <br /><br />To explore the dataset, you can choose between the views
+          Pages, Documents and Courses. Using the tooltip, you can see
+          additional information about this data point.<br /><br /><br />
+        </p>
+        <h3>Disclaimer</h3>
+        <p>
+          No guarantee of correctness or completeness of the data. In addition,
+          a reduction of the dimensions using TSNE does not guarantee a correct
+          representation of the relationships. Since the original dimension was
+          much larger than 2, data points may overlap that have nothing to do
+          with each other.<br />
+          Please don't try to learn from this horrible code. It had to be done quickly.
+        </p>
+      </div>
+    </div>
 
     <script src="script.js"></script>
   </body>
