@@ -1,5 +1,8 @@
-const width = 600;
-const height = 400;
+const containerDiv = document.getElementById('scatter-plot');
+const padding = containerDiv.offsetWidth * 0.05;
+const width = containerDiv.offsetWidth - padding;
+const height = containerDiv.offsetHeight - padding;
+const radius = width / 750;
 
 const initialZoomScale = 1; // Set your initial zoom scale factor
 const referenceSize = 50; // Set a reference size for your data points
@@ -43,13 +46,6 @@ d3.csv('data/allPages.csv').then(function (data) {
     // Update the scaling of the scatter plot elements
     svg.selectAll('circle').attr('transform', transform.toString());
 
-    svg
-      .selectAll('circle')
-      .attr(
-        'r',
-        (d) => (d.size / referenceSize) * (currentZoomScale / initialZoomScale)
-      );
-
     // Update axes if you have them
     // x-axis
     svg
@@ -65,8 +61,6 @@ d3.csv('data/allPages.csv').then(function (data) {
 
   // Apply the zoom behavior to the SVG container
   svg.call(zoom);
-
-  const radius = 1;
 
   // Create circles for each data point, with size and color determined by the data
   svg
