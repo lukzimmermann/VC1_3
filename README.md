@@ -19,6 +19,6 @@ Install all Python dependencies:
 pip install -r requirements.txt
 ```
 
-You need a vector Database where you stored your data. To fill the database use the code of this [Repository](https://github.com/lukzimmermann/TextEmbedder).
+You need a vector Database where you stored your data.
 
 Run all Elements and be Happy
