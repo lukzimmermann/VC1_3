@@ -1,0 +1,106 @@
+:root {
+  font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande',
+    'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+  background-color: rgb(24, 24, 30);
+}
+
+#body {
+  width: 100vw;
+}
+
+.title {
+  color: rgb(255, 255, 255);
+  font-size: x-large;
+  display: flex;
+  flex-direction: column;
+  justify-items: center;
+  align-items: center;
+  font-weight: bold;
+}
+
+.subtitle {
+  color: rgb(200, 200, 200);
+  font-size: medium;
+  display: flex;
+  flex-direction: column;
+  justify-items: center;
+  align-items: center;
+  font-weight: 100;
+  margin-top: -0.5rem;
+}
+
+.titleElement {
+  margin-top: 4rem;
+}
+
+.plot-container {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-items: center;
+  align-items: center;
+}
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+/* Style for the button that opens the dropdown */
+.dropdown-button {
+  background-color: #5300eb;
+  color: white;
+  font-size: medium;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+}
+
+/* Style for the dropdown content (hidden by default) */
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #676767;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+}
+
+/* Style for the dropdown items */
+.dropdown-item {
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+
+  padding: 1rem;
+}
+
+/* Change the color of the dropdown items on hover */
+.dropdown-item:hover {
+  background-color: #ddd;
+}
+
+/* Show the dropdown content when hovering over the dropdown button */
+.dropdown:hover .dropdown-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.scatter-plot {
+  background-color: rgb(44, 44, 50);
+  border-radius: 2rem;
+  padding: 5rem 2rem 2rem 2rem;
+  display: flex;
+  justify-content: center;
+}
+
+.tooltip {
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+  pointer-events: none;
+  font-size: 12px;
+  display: none;
+}
