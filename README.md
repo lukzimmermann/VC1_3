@@ -23,4 +23,4 @@ To explore the dataset, you can choose between the views Courses, Documents and 
 
 ### Disclaimer
 
-No guarantee of correctness or completeness of the data. In addition, a reduction of the dimensions using TSNE does not guarantee a correct representation of the relationships. Since the original dimension was much larger than 2, data points may overlap that have nothing to do with each other.
+No guarantee of correctness or completeness of the data. In addition, a reduction of the dimensions using TSNE does not guarantee a correct representation of the relationships. Since the original dimension was much larger than 2, data points may overlap that have nothing to do with each other. Please don't try to learn from this horrible code. It had to be done quickly.
