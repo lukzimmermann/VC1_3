@@ -85,9 +85,6 @@
   flex-direction: column;
 }
 
-.plot-container {
-}
-
 .scatter-plot {
   display: flex;
   align-items: center;
