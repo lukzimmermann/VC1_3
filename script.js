@@ -1,110 +1,350 @@
-const width = 600;
-const height = 400;
+const courseButton = document.getElementById('courseButton');
+const documentsButton = document.getElementById('documentsButton');
+const pagesButton = document.getElementById('pagesButton');
+const resetButton = document.getElementById('resetButton');
+
+courseButton.addEventListener('click', coursesClicked);
+documentsButton.addEventListener('click', documentsClicked);
+pagesButton.addEventListener('click', pagesClicked);
+resetButton.addEventListener('click', reset);
+
+const scatterPlotDiv = document.getElementById('scatter-plot');
+let containerDiv = document.getElementById('scatter-plot');
+let padding = containerDiv.offsetWidth * 0.05;
+let width = containerDiv.offsetWidth - padding;
+let height = containerDiv.offsetHeight - padding;
+let radius = width / 1000;
+
+let pointScale = width / 500;
 
 const initialZoomScale = 1; // Set your initial zoom scale factor
-const referenceSize = 50; // Set a reference size for your data points
+const referenceSize = 50;
 
-// Create an SVG element
-const svg = d3
-  .select('#scatter-plot')
-  .append('svg')
-  .attr('width', width)
-  .attr('height', height);
+let activeView = 0;
 
-// Load data from a CSV file
-d3.csv('data/allPages.csv').then(function (data) {
-  // Convert x, y, and size values to numbers
-  data.sort((b, a) => a.size - b.size);
+const onresize = (dom_elem, callback) => {
+  const resizeObserver = new ResizeObserver(() => callback());
+  resizeObserver.observe(dom_elem);
+};
 
-  data.forEach(function (d) {
-    d.x = +d.x;
-    d.y = +d.y;
-    d.size = +d.size;
-  });
+function coursesClicked() {
+  courseButton.style.backgroundColor = '#5300eb';
+  documentsButton.style.backgroundColor = '#2C2C32';
+  pagesButton.style.backgroundColor = '#2C2C32';
+  activeView = 0;
+  reset();
+}
 
-  // Define scales for x and y axes
-  const xScale = d3.scaleLinear().domain([-120, 120]).range([0, width]);
-  const yScale = d3.scaleLinear().domain([-120, 120]).range([height, 0]);
+function documentsClicked() {
+  courseButton.style.backgroundColor = '#2C2C32';
+  documentsButton.style.backgroundColor = '#5300eb';
+  pagesButton.style.backgroundColor = '#2C2C32';
+  activeView = 1;
+  reset();
+}
 
-  // Create a color scale based on the number of data points
-  const colorScale = d3
-    .scaleOrdinal()
-    .domain(d3.range(data.length))
-    .range(d3.schemeCategory10);
+function pagesClicked() {
+  courseButton.style.backgroundColor = '#2C2C32';
+  documentsButton.style.backgroundColor = '#2C2C32';
+  pagesButton.style.backgroundColor = '#5300eb';
+  activeView = 2;
+  reset();
+}
 
-  const zoom = d3
-    .zoom()
-    .scaleExtent([0.5, 5]) // Set the minimum and maximum zoom scale
-    .on('zoom', zoomed);
+function reset() {
+  width = containerDiv.offsetWidth - padding;
+  height = containerDiv.offsetHeight - padding;
+  radius = width / 750;
+  scatterPlotDiv.innerHTML = '';
+  if (activeView == 0) plotAllCourses();
+  if (activeView == 1) plotAllDocuments();
+  if (activeView == 2) plotAllPages();
+}
 
-  function zoomed(event) {
-    // Get the current zoom transform
-    const { transform } = event;
+onresize(containerDiv, function () {
+  width = containerDiv.offsetWidth - padding;
+  height = containerDiv.offsetHeight - padding;
+  radius = width / 750;
+  scatterPlotDiv.innerHTML = '';
+  if (activeView == 0) plotAllCourses();
+  if (activeView == 1) plotAllDocuments();
+  if (activeView == 2) plotAllPages();
 
-    // Update the scaling of the scatter plot elements
-    svg.selectAll('circle').attr('transform', transform.toString());
+  pointScale = width / 500;
+  console.log(pointScale);
+});
+
+function plotAllCourses() {
+  const svg = d3
+    .select('#scatter-plot')
+    .append('svg')
+    .attr('width', width)
+    .attr('height', height);
+
+  const categories = [];
+
+  d3.csv('data/allCourses.csv').then(function (data) {
+    data.sort((b, a) => a.size - b.size);
+
+    data.forEach(function (d) {
+      d.x = +d.x;
+      d.y = +d.y;
+      d.size = +d.size;
+      if (!categories.includes(d.name)) {
+        categories.push(d.name);
+      }
+    });
+
+    const colorScale = d3
+      .scaleOrdinal()
+      .domain(categories)
+      .range(
+        categories.map((d, i) =>
+          d3.interpolateRainbow(i / (categories.length - 1))
+        )
+      );
+
+    const xScale = d3.scaleLinear().domain([-120, 120]).range([0, width]);
+    const yScale = d3.scaleLinear().domain([-120, 120]).range([height, 0]);
+
+    const zoom = d3.zoom().scaleExtent([0.5, 5]).on('zoom', zoomed);
+
+    function zoomed(event) {
+      const { transform } = event;
+      svg.selectAll('circle').attr('transform', transform.toString());
+
+      svg
+        .select('.x-axis')
+        .attr('transform', `translate(0, ${height})`)
+        .call(d3.axisBottom(xScale).scale(transform.rescaleX(xScale)));
+
+      svg
+        .select('.y-axis')
+        .call(d3.axisLeft(yScale).scale(transform.rescaleY(yScale)));
+    }
+
+    svg.call(zoom);
 
     svg
       .selectAll('circle')
-      .attr(
-        'r',
-        (d) => (d.size / referenceSize) * (currentZoomScale / initialZoomScale)
+      .data(data)
+      .enter()
+      .append('circle')
+      .attr('cx', (d) => xScale(d.x))
+      .attr('cy', (d) => yScale(d.y))
+      .attr('r', (d) => (d.size / 50) * pointScale)
+      .attr('fill', (d) => colorScale(d.name))
+      .classed('drop-shadow', true)
+      .on('mouseover', function (d) {
+        course = d.toElement.__data__.name;
+        page = d.toElement.__data__.size;
+        d3.select('#tooltip')
+          .style('display', 'block')
+          .html(`<strong>${course}</strong><br>Pages: ${page}`);
+
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr('r', (d) => (d.size / 50) * pointScale + 10);
+      })
+      .on('mousemove', function (event) {
+        d3.select('#tooltip')
+          .style('left', event.pageX + 10 + 'px')
+          .style('top', event.pageY - 10 + 'px');
+      })
+      .on('mouseout', function () {
+        d3.select('#tooltip').style('display', 'none');
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr('r', (d) => (d.size * pointScale) / 50);
+      })
+      .on('click', function (event) {
+        console.log(event);
+      });
+  });
+}
+
+function plotAllDocuments() {
+  const svg = d3
+    .select('#scatter-plot')
+    .append('svg')
+    .attr('width', width)
+    .attr('height', height);
+
+  const categories = [];
+
+  d3.csv('data/allDocuments.csv').then(function (data) {
+    data.sort((b, a) => a.size - b.size);
+
+    data.forEach(function (d) {
+      d.x = +d.x;
+      d.y = +d.y;
+      d.size = +d.size;
+      if (!categories.includes(d.category)) {
+        categories.push(d.category);
+      }
+    });
+
+    const colorScale = d3
+      .scaleOrdinal()
+      .domain(categories)
+      .range(
+        categories.map((d, i) =>
+          d3.interpolateRainbow(i / (categories.length - 1))
+        )
       );
 
-    // Update axes if you have them
-    // x-axis
+    const xScale = d3.scaleLinear().domain([-120, 120]).range([0, width]);
+    const yScale = d3.scaleLinear().domain([-120, 120]).range([height, 0]);
+
+    const zoom = d3.zoom().scaleExtent([0.5, 20]).on('zoom', zoomed);
+
+    function zoomed(event) {
+      const { transform } = event;
+      svg.selectAll('circle').attr('transform', transform.toString());
+
+      svg
+        .select('.x-axis')
+        .attr('transform', `translate(0, ${height})`)
+        .call(d3.axisBottom(xScale).scale(transform.rescaleX(xScale)));
+
+      svg
+        .select('.y-axis')
+        .call(d3.axisLeft(yScale).scale(transform.rescaleY(yScale)));
+    }
+
+    svg.call(zoom);
+
     svg
-      .select('.x-axis')
-      .attr('transform', `translate(0, ${height})`)
-      .call(d3.axisBottom(xScale).scale(transform.rescaleX(xScale)));
+      .selectAll('circle')
+      .data(data)
+      .enter()
+      .append('circle')
+      .attr('cx', (d) => xScale(d.x))
+      .attr('cy', (d) => yScale(d.y))
+      .attr('r', (radius + 1.5) * pointScale)
+      .attr('fill', (d) => colorScale(d.category))
+      .classed('drop-shadow', true)
+      .on('mouseover', function (d) {
+        course = d.toElement.__data__.category;
+        filename = d.toElement.__data__.name;
+        page = d.toElement.__data__.size;
+        d3.select('#tooltip')
+          .style('display', 'block')
+          .html(
+            `<strong>${course}</strong><br>File: ${filename}<br>Pages: ${page}`
+          );
 
-    // y-axis
-    svg
-      .select('.y-axis')
-      .call(d3.axisLeft(yScale).scale(transform.rescaleY(yScale)));
-  }
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr('r', (radius + 1.5) * pointScale + 0.5);
+      })
+      .on('mousemove', function (event) {
+        d3.select('#tooltip')
+          .style('left', event.pageX + 10 + 'px')
+          .style('top', event.pageY - 10 + 'px');
+      })
+      .on('mouseout', function () {
+        d3.select('#tooltip').style('display', 'none');
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr('r', (radius + 1.5) * pointScale);
+      })
+      .on('click', function (event) {
+        console.log(event);
+      });
+  });
+}
 
-  // Apply the zoom behavior to the SVG container
-  svg.call(zoom);
+function plotAllPages() {
+  const svg = d3
+    .select('#scatter-plot')
+    .append('svg')
+    .attr('width', width)
+    .attr('height', height);
 
-  // Create circles for each data point, with size and color determined by the data
-  svg
-    .selectAll('circle')
-    .data(data)
-    .enter()
-    .append('circle')
-    .attr('cx', (d) => xScale(d.x))
-    .attr('cy', (d) => yScale(d.y))
-    .attr('r', (d) => d.size / 50 + 5) // Size of the circles based on the "size" column
-    .attr('fill', (d, i) => colorScale(i)) // Color of the circles based on the data point index
-    .on('mouseover', function (d) {
-      name = d.toElement.__data__.name;
-      size = d.toElement.__data__.size;
-      d3.select('#tooltip')
-        .style('display', 'block')
-        .html(`<strong>${name}</strong><br>Pages: ${size}`);
+  const categories = [];
 
-      // Add animation to increase the size of the circle
-      d3.select(this)
-        .transition()
-        .duration(200) // Set the duration of the animation in milliseconds
-        .attr('r', (d) => d.size / 50 + 10); // Increase the size as desired
-    })
-    .on('mousemove', function (event) {
-      // Move the tooltip with the mouse
-      d3.select('#tooltip')
-        .style('left', event.pageX + 10 + 'px')
-        .style('top', event.pageY - 10 + 'px');
-    })
-    .on('mouseout', function () {
-      // Hide the tooltip when mouseout event occurs
-      d3.select('#tooltip').style('display', 'none');
-      d3.select(this)
-        .transition()
-        .duration(200) // Set the duration of the animation in milliseconds
-        .attr('r', (d) => d.size / 50 + 5); // Increase the size as desired
-    })
-    .on('click', function (event) {
-      console.log(event);
+  d3.csv('data/allPages.csv').then(function (data) {
+    data.sort((b, a) => a.size - b.size);
+
+    data.forEach(function (d) {
+      d.x = +d.x;
+      d.y = +d.y;
+      if (!categories.includes(d.category)) {
+        categories.push(d.category);
+      }
     });
-});
+
+    const colorScale = d3
+      .scaleOrdinal()
+      .domain(categories)
+      .range(
+        categories.map((d, i) =>
+          d3.interpolateRainbow(i / (categories.length - 1))
+        )
+      );
+
+    const xScale = d3.scaleLinear().domain([-120, 120]).range([0, width]);
+    const yScale = d3.scaleLinear().domain([-120, 120]).range([height, 0]);
+
+    const zoom = d3.zoom().scaleExtent([0.5, 20]).on('zoom', zoomed);
+
+    function zoomed(event) {
+      const { transform } = event;
+      svg.selectAll('circle').attr('transform', transform.toString());
+
+      svg
+        .select('.x-axis')
+        .attr('transform', `translate(0, ${height})`)
+        .call(d3.axisBottom(xScale).scale(transform.rescaleX(xScale)));
+
+      svg
+        .select('.y-axis')
+        .call(d3.axisLeft(yScale).scale(transform.rescaleY(yScale)));
+    }
+
+    svg.call(zoom);
+
+    svg
+      .selectAll('circle')
+      .data(data)
+      .enter()
+      .append('circle')
+      .attr('cx', (d) => xScale(d.x))
+      .attr('cy', (d) => yScale(d.y))
+      .attr('r', radius)
+      .attr('fill', (d) => colorScale(d.category))
+      .classed('drop-shadow', true)
+      .on('mouseover', function (d) {
+        course = d.toElement.__data__.category;
+        filename = d.toElement.__data__.name;
+        page = d.toElement.__data__.page;
+        d3.select('#tooltip')
+          .style('display', 'block')
+          .html(
+            `<strong>${course}</strong><br>File: ${filename}<br>Pages: ${page}`
+          );
+
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr('r', radius + 0.5);
+      })
+      .on('mousemove', function (event) {
+        d3.select('#tooltip')
+          .style('left', event.pageX + 10 + 'px')
+          .style('top', event.pageY - 10 + 'px');
+      })
+      .on('mouseout', function () {
+        d3.select('#tooltip').style('display', 'none');
+        d3.select(this).transition().duration(200).attr('r', radius);
+      })
+      .on('click', function (event) {
+        console.log(event);
+      });
+  });
+}
